@@ -1,0 +1,25 @@
+{
+  "name": "advocatemanagement",
+  "version": "1.0.0",
+  "description": "code challenge vaikilsearch",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "Annadurai",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^3.1.0",
+    "express": "^4.17.1",
+    "moment": "^2.24.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnnaduraiSarasu/Vakilsearchcodingchallenge-.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AnnaduraiSarasu/Vakilsearchcodingchallenge-/issues"
+  },
+  "homepage": "https://github.com/AnnaduraiSarasu/Vakilsearchcodingchallenge-#readme"
+}
