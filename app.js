@@ -18,10 +18,13 @@ const rl = readline.createInterface({
         console.log("|  8. Display all cases under a state  |\n");
         console.log("|  9. Get Advocate Details             |\n");
         console.log("|  0. Menu                             |\n");
+        console.log("|  Exit (press CTRL + C)               |\n");
         console.log("----------------------------------------\n");
         rl.prompt();
 
 let final_advocate =[];
+
+//let final_advocate =[{"SeniorAdvocateId":"2323","junior":[{"juniorId":"1111","juniorcase":[{"casePracticingState":"TN","jcaseid":"REW345","jcastatus":"active"},{"casePracticingState":"TN","jcaseid":"GRE234","jcastatus":"active"}]}],"case":[{"caseid":"TRE789","practicingState":"TN","casestatus":"deactive"}]}];
 let duplicateAvoid =[];
 rl.on('line', (line) => {
 
@@ -52,7 +55,48 @@ rl.on('line', (line) => {
 
             });
     }
-    // function for check case Id status
+
+    // function for check case Id status for junior
+    async function checkValidcaseIdforjunior(cid,juniorid) {
+            return new Promise(
+                (resolve,reject) =>{
+                    let calseLen = final_advocate.length;
+                    final_advocate.map(function(e,i) { 
+                    
+                       if(e['junior']){
+
+                            e['junior'].map(function(caseitem) {
+
+                                if(caseitem['juniorId'] == juniorid){
+
+                                        if(caseitem['juniorcase']) {
+
+                                            caseitem['juniorcase'].map(function(finalitem){
+
+                                                    if(finalitem['jcaseid'] == cid) {
+                                                        resolve({'res':true});      
+                                                    }
+                                                
+
+                                            })
+                                        }      
+                                }
+                            });
+                                   
+
+
+                       }
+
+                       if(calseLen == i+1){
+                         resolve({'res':false});      
+                       }
+                      
+                    });
+
+            });
+    }
+
+    // function for check case Id status senior
     async function checkValidcaseIdpromise(cid,seniorid) {
             return new Promise(
                 (resolve,reject) =>{
@@ -132,6 +176,45 @@ rl.on('line', (line) => {
                     resolve({'res':true});      
                 });
     }
+
+
+    // reject the junior Advocate Case 
+    async function rejectCasestatusUpdationjunior(value, desc) {
+            return new Promise(
+                (resolve,reject) =>{
+
+                    let lenofadvocate = final_advocate.length;
+                     final_advocate.map(function(itemObj,i){
+
+                            if(itemObj['junior']){
+
+                                    itemObj['junior'].map(function(caseitem) {
+
+                                        if(caseitem['juniorId'] == value){
+
+                                                if(caseitem['juniorcase']) {
+
+                                                    caseitem['juniorcase'].map(function(finalitem){
+
+                                                            if(finalitem['jcaseid'] == desc) {
+                                                                finalitem['jcastatus'] = 'deactive';
+                                                                resolve({'res':true});      
+                                                            }
+                                                        
+
+                                                    })
+                                                }      
+                                        }
+                                    });               
+                            }
+                            if(lenofadvocate == i+1) {
+                                resolve({'res':false});       
+                            }
+
+                    });
+            });
+    }
+
     // reject Case by senior Advocate
     async function rejectCasebySenior( objval,value, desc) {
             return new Promise(
@@ -160,7 +243,7 @@ rl.on('line', (line) => {
                 });
     }
     // update in junior data
-    async function updateJuniorid( objval,value, desc) {
+    async function updateJuniorid( objval,value, desc,jcaseid) {
             return new Promise(
                 (resolve,reject) =>{
                     let final_advocatelen =final_advocate.length;
@@ -175,12 +258,42 @@ rl.on('line', (line) => {
                                         if(!caseitem['practicingState']){
                                             caseitem['practicingState'] = desc;
                                             resolve({'res':true}); 
-                                        }else{
-                                            resolve({'res':false}); 
-                                        }       
+                                        }      
                                     }
                                 });
                             }
+
+                            if(objval == 'updatejuniorcase'){
+
+                                itemObj['junior'].map(function(caseitem){
+
+                                    if(caseitem['juniorId'] == value){
+                                            let cparray =[];
+                                        if(caseitem['juniorcase']){
+                                            cparray = caseitem['juniorcase'].slice();
+                                            let obj ={};
+                                            obj['casePracticingState'] = desc;
+                                            obj['jcaseid'] = jcaseid;
+                                            obj['jcastatus'] = 'active';
+                                            cparray.push(obj);
+                                            caseitem['juniorcase'] =cparray;
+
+                                            resolve({'res':true}); 
+                                        } else{
+
+                                             let obj ={};
+                                            obj['casePracticingState'] = desc;
+                                            obj['jcaseid'] = jcaseid;
+                                            obj['jcastatus'] = 'active';
+                                            cparray.push(obj);
+                                            caseitem['juniorcase'] =cparray;
+                                            resolve({'res':true}); 
+
+                                        }     
+                                    }
+                                });
+                            }
+
                             if(final_advocatelen == i+1){
                                 resolve({'res':false});      
                             }
@@ -245,14 +358,55 @@ rl.on('line', (line) => {
         return new Promise((resolve,reject)=>{
 
                 if(option == 'ps'){
-                    rl.question('Enter Practicing State ::', async (answer) => {
-                        let resjn = await updateJuniorid('updatejuniorstate',juniorid,answer);
-                            if(resjn.res){
-                                resolve({'res':true})
-                            }else{
-                                resolve({'res':false})
-                            }
-                    });
+
+                    console.log("  1. update state ")
+                    console.log("  2. create case  ")
+
+                     rl.question('Enter your option to update::', async (junioroption) => {
+
+                        if(junioroption == '1'){
+                              
+                                        rl.question('Enter Practicing State ::', async (answer) => {
+                                        let resjn = await updateJuniorid('updatejuniorstate',juniorid,answer);
+                                            if(resjn.res){
+                                                resolve({'res':true})
+                                            }else{
+                                                resolve({'res':false})
+                                            }
+
+                                        });   
+                            
+
+                        } else if(junioroption == '2'){
+
+
+                                rl.question('Enter case id::', async (juniorcaseid) => {
+                                    if(duplicateAvoid.indexOf(juniorcaseid) > -1){
+                                        resolve({'res':false})
+                                    }else{
+                                        duplicateAvoid.push(juniorcaseid);
+                                        rl.question('Enter Practicing State ::', async (answer) => {
+                                        let resjn = await updateJuniorid('updatejuniorcase',juniorid,answer,juniorcaseid);
+                                            if(resjn.res){
+                                                resolve({'res':true})
+                                            }else{
+                                                resolve({'res':false})
+                                            }
+
+                                        });   
+                                    }
+                                }); 
+
+
+
+                        }else{
+                            resolve({'res':false}) 
+                        }
+
+                     });
+                   
+
+
 
                 }else if(option == 'scase'){
 
@@ -278,6 +432,37 @@ rl.on('line', (line) => {
               
         });
     }
+
+    // function for reject junior case 
+
+    async function rejectJuniorCase(juniorid,option){
+        return new Promise((resolve,reject)=>{
+              
+                if(option == 'scase'){
+
+                    rl.question('Enter Case Id ::', async (answer) => {
+
+                        let checkStatus = await checkValidcaseIdforjunior(answer,juniorid);
+
+                        if(checkStatus.res){
+                            let resjn = await rejectCasestatusUpdationjunior(juniorid,answer);
+                            if(resjn.res){
+                                resolve({'res':true})
+                            }else{
+                                resolve({'res':false})
+                            }
+                        }else{
+                            console.log("Not Valid Case Id")
+                            resolve({'res':false})
+                        }
+                            
+                    });
+
+                }
+              
+        });
+    }
+
    // function for create case for senior advocate
     async function createCaseAdvocateId(seniorid){
         return new Promise((resolve,reject)=>{
@@ -414,9 +599,9 @@ rl.on('line', (line) => {
 
                                 let response = await updatejuniorAdvocateId(answer,'ps');
                                 if(response.res){
-                                    console.log("***junior state Added Success**"); 
+                                    console.log("***Update Success**"); 
                                 }else{
-                                    console.log("***already state Exits not allowed to Add**"); 
+                                    console.log("***input wrong or caseid or state already Exits **"); 
                                 }
 
                             }else{
@@ -433,31 +618,70 @@ rl.on('line', (line) => {
     }
     else if(lineStatus == '6'){
 
-                rl.question('Enter Senior Advocate ID::', (answer) => {
 
-                         async function createStateSenoirAdvocate(answer){
+                console.log('1. Reject senior case');
+                console.log('2. Reject junior case');
 
-                            let checkStatus = await checkValidseniorIdpromise(answer);
-                            if(checkStatus.res){
 
-                                let response = await updatejuniorAdvocateId(answer,'scase');
-                                if(response.res){
-                                    console.log("**Case sucessfully Rejected**"); 
-                                }else{
-                                    console.log("**issue on rejection try once again**"); 
-                                }
+                rl.question('Enter your option::', (answer) => {
 
-                            }else{
+                        if(answer == '1'){
 
-                                console.log("***Not valid Id***");   
-                            }
+                            rl.question('Enter Senior Advocate ID::', (answer) => {
+                                     async function createStateSenoirAdvocate(answer){
+                                        let checkStatus = await checkValidseniorIdpromise(answer);
+                                        if(checkStatus.res){
+
+                                            let response = await updatejuniorAdvocateId(answer,'scase');
+                                            if(response.res){
+                                                console.log("**Case sucessfully Rejected**"); 
+                                            }else{
+                                                console.log("**issue on rejection try once again**"); 
+                                            }
+                                        }else{
+                                            console.log("***Not valid Id***");   
+                                        }
+                                    }
+                                    (async ()=>{
+                                        await createStateSenoirAdvocate(answer);
+                                        rl.prompt();
+
+                                    })();   
+                            });
+
+                        }else if (answer == '2'){
+
+                                rl.question('Enter junior Advocate ID::', (answer) => {
+                                     async function createStateSenoirAdvocate(answer){
+
+                                       let checkStatus = await checkValidjuniorIdpromise(answer);
+
+                                        if(checkStatus.res){
+
+                                            let response = await rejectJuniorCase(answer,'scase');
+                                            if(response.res){
+                                                console.log("**Case sucessfully Rejected**"); 
+                                            }else{
+                                                console.log("**try once again**"); 
+                                            }
+                                        }else{
+                                            console.log("***Not valid Id***");   
+                                        }
+                                    }
+                                    (async ()=>{
+                                        await createStateSenoirAdvocate(answer);
+                                        rl.prompt();
+
+                                    })();   
+                            });
+
+
+                        }else{
+                                        console.log("**please provide valid option**")
+                                        rl.prompt();
+
                         }
-                        (async ()=>{
-                            await createStateSenoirAdvocate(answer);
-                            rl.prompt();
-
-                        })();   
-                  });
+                });
     }
     else if(lineStatus == '7'){
         console.log(" ----------------------------------------\n");
@@ -515,70 +739,139 @@ rl.on('line', (line) => {
     }
     else if(lineStatus == '9'){
 
+        console.log("1. Get senior advocate details");
+        console.log("2. Get junior advocate details");
 
+         rl.question('Enter Your option::', (answer) => {
 
-          rl.question('Enter Senior Advocate ID::', (answer) => {
+            if(answer == '1'){
 
-                     async function createJuiorRecord(){
-                                try{
-                                    let validRes = await checkValidseniorIdpromise(answer);
-                                    if(validRes.res){
+                rl.question('Enter Senior Advocate ID::', (answer) => {
 
-                                        console.log(" ----------------------------------------\n");
-                                        console.log("          ADVOCATE DETAILS               \n");
-                                        console.log(" ----------------------------------------\n");  
-                                        console.log("          -->"+answer+"<--              \n");
-                                        console.log(" ----------------------------------------\n"); 
-                                        if(final_advocate.length > 0){
-                                            final_advocate.map(function(advocateList){
+                             async function createJuiorRecord(){
+                                        try{
+                                            let validRes = await checkValidseniorIdpromise(answer);
+                                            if(validRes.res){
 
-                                                if(advocateList['SeniorAdvocateId'] == answer){
+                                                console.log(" ----------------------------------------\n");
+                                                console.log("          ADVOCATE DETAILS               \n");
+                                                console.log(" ----------------------------------------\n");  
+                                                console.log("          -->"+answer+"<--              \n");
+                                                console.log(" ----------------------------------------\n"); 
+                                                if(final_advocate.length > 0){
+                                                    final_advocate.map(function(advocateList){
 
-                                                    console.log("AdvocateId"+":"+advocateList['SeniorAdvocateId']+"\n")
-                                                    if(advocateList['state']){
-                                                         console.log("State"+":"+advocateList['state']['stateId']+"\n")
-                                                    }
-                                                    if(advocateList['junior']){
-                                                           console.log("Junior Advocate List :\n")
-                                                           let design_tem ="";
-                                                            advocateList['junior'].map(function(argument) {
-                                                                  design_tem  = design_tem + argument['juniorId'];
-                                                                    if(argument['practicingState']){
-                                                                     design_tem  = design_tem +"-"+argument['practicingState'];
-                                                                    }
+                                                        if(advocateList['SeniorAdvocateId'] == answer){
 
-                                                              console.log(design_tem); 
-                                                              design_tem="";    
-                                                            });
+                                                            console.log("AdvocateId"+":"+advocateList['SeniorAdvocateId']+"\n")
+                                                            if(advocateList['state']){
+                                                                 console.log("State"+":"+advocateList['state']['stateId']+"\n")
+                                                            }
+                                                            if(advocateList['junior']){
+                                                                   console.log("Junior Advocate List :\n")
+                                                                   let design_tem ="";
+                                                                    advocateList['junior'].map(function(argument) {
+                                                                          design_tem  = design_tem + argument['juniorId'];
+                                                                            if(argument['practicingState']){
+                                                                             design_tem  = design_tem +"-"+argument['practicingState'];
+                                                                            }
+
+                                                                      console.log(design_tem); 
+                                                                      design_tem="";    
+                                                                    });
+                                                                }
+                                                                if(advocateList['case']){
+                                                                   console.log("Case Details :\n")
+                                                                    advocateList['case'].map(function(argument) {
+                                                                        console.log(argument['caseid']+"-"+ argument['practicingState']+"-"+ argument['casestatus']) 
+                                                                    });
+                                                                
+                                                                }
+
                                                         }
-                                                        if(advocateList['case']){
-                                                           console.log("Case Details :\n")
-                                                            advocateList['case'].map(function(argument) {
-                                                                console.log(argument['caseid']+"-"+ argument['practicingState']+"-"+ argument['casestatus']) 
-                                                            });
-                                                        
-                                                        }
+                                                       
+                                                    }); 
+                                                }else{
+                                                console.log("            NO RECORDS                  \n"); 
+                                                }           
+                                                console.log(" ----------------------------------------\n");  
 
-                                                }
-                                               
-                                            }); 
-                                        }else{
-                                        console.log("            NO RECORDS                  \n"); 
-                                        }           
-                                        console.log(" ----------------------------------------\n");  
+                                                }else{
+                                                    console.log("***Enter Valid SeniorId***");           
+                                                 }
+                                                   }catch(e){
+                                                                console.log(e)
+                                                            }
+                                                    };
+                                                 (async ()=>{
+                                                        await createJuiorRecord();
+                                                        rl.prompt();
+                                                 })();  
+                });
 
-                                        }else{
-                                            console.log("***Enter Valid SeniorId***");           
-                                         }
-                                           }catch(e){
+            }else if(answer == '2'){
+
+                rl.question('Enter junior Advocate ID::', (answer) => {
+
+                             async function createJuiorRecord(){
+                                        try{
+                                                let validRes = await checkValidjuniorIdpromise(answer);
+                                                if(validRes.res){
+
+                                                        console.log(" ----------------------------------------\n");
+                                                        console.log("          ADVOCATE DETAILS               \n");
+                                                        console.log(" ----------------------------------------\n");  
+                                                        console.log("          -->"+answer+"<--              \n");
+                                                        console.log(" ----------------------------------------\n"); 
+                                                        if(final_advocate.length > 0) {
+                                                            final_advocate.map(function(advocateList){
+
+                                                                    if(advocateList['junior']){
+                                                                            advocateList['junior'].map(function(argument) {
+                                                                                if(argument['juniorId'] ==answer){
+
+                                                                                        console.log("JuniorAdvocateId:"+  argument['juniorId']);
+                                                                                        if(argument['practicingState']){
+                                                                                            console.log("State:"+  argument['practicingState']); 
+                                                                                        }
+                                                                                            console.log("Case List:");
+                                                                                        argument['juniorcase'].map(function(caselist){
+                                                                                            console.log(caselist['jcaseid']+"-"+ caselist['casePracticingState']+"-"+ caselist['jcastatus']) 
+                                                                                        });
+                                                                                    
+                                                                                    }
+                                                                                
+                                                                            });
+                                                                        }
+                                                            }); 
+                                                        }else {
+                                                            console.log("            NO RECORDS                  \n"); 
+                                                        }           
+                                                            console.log(" ----------------------------------------\n");  
+
+                                                    }else {
+                                                        console.log("***Enter Valid juniorid***");           
+                                                     }
+                                                }catch(e){
                                                         console.log(e)
-                                                    }
-                                            };
-                                         (async ()=>{
-                                                await createJuiorRecord();
-                                                rl.prompt();
-                                         })();  
-              });           
+                                                }
+                                    };
+                                    (async ()=>{
+                                        await createJuiorRecord();
+                                        rl.prompt();
+                                    })();  
+                });
+
+            }else{
+
+                console.log('**Please provide Valid option**');
+                r1.prompt();
+            }
+
+        }); 
+
+
+
     }
     else if( lineStatus == '0'){
         console.log("----------------------------------------\n");
@@ -592,9 +885,14 @@ rl.on('line', (line) => {
         console.log("|  6 .Reject a case.                   |\n");
         console.log("|  7. Display all advocates            |\n");
         console.log("|  8. Display all cases under a state  |\n");
-        console.log("|  9. Get Advocate Details             |\n");
+        console.log("|  9. Show Advocate Details            |\n");
         console.log("|  0. Menu                             |\n");
+        console.log("|  Exit (press CTRL + C)               |\n");
         console.log("----------------------------------------\n");
+         rl.prompt(); 
+    }
+    else if( lineStatus == '10'){
+            console.log("res::"+JSON.stringify(final_advocate));
          rl.prompt(); 
     }
     else{
