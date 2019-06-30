@@ -16,7 +16,7 @@ const rl = readline.createInterface({
         console.log("|  6. Reject a case.                   |\n");
         console.log("|  7. Display all advocates            |\n");
         console.log("|  8. Display all cases under a state  |\n");
-        console.log("|  9. Get Advocate Details             |\n");
+        console.log("|  9. Show Advocate Details            |\n");
         console.log("|  0. Menu                             |\n");
         console.log("|  Exit (press CTRL + C)               |\n");
         console.log("----------------------------------------\n");
@@ -24,7 +24,38 @@ const rl = readline.createInterface({
 
 let final_advocate =[];
 
-//let final_advocate =[{"SeniorAdvocateId":"2323","junior":[{"juniorId":"1111","juniorcase":[{"casePracticingState":"TN","jcaseid":"REW345","jcastatus":"active"},{"casePracticingState":"TN","jcaseid":"GRE234","jcastatus":"active"}]}],"case":[{"caseid":"TRE789","practicingState":"TN","casestatus":"deactive"}]}];
+// let final_advocate =[{
+//     "SeniorAdvocateId": "2323",
+//     "junior": [{
+//         "juniorId": "1111",
+//         "juniorcase": [{
+//             "casePracticingState": "TN",
+//             "jcaseid": "REW345",
+//             "jcastatus": "active"
+//         }, {
+//             "casePracticingState": "TN",
+//             "jcaseid": "GRE234",
+//             "jcastatus": "active"
+//         }]
+//     },
+//     {
+//         "juniorId": "3333",
+//         "juniorcase": [{
+//             "casePracticingState": "KA",
+//             "jcaseid": "FGD454",
+//             "jcastatus": "active"
+//         }, {
+//             "casePracticingState": "TN",
+//             "jcaseid": "SERD34",
+//             "jcastatus": "active"
+//         }]
+//     }],
+//     "case": [{
+//         "caseid": "TRE789",
+//         "practicingState": "TN",
+//         "casestatus": "deactive"
+//     }]
+// }];
 let duplicateAvoid =[];
 rl.on('line', (line) => {
 
@@ -708,7 +739,6 @@ rl.on('line', (line) => {
                     console.log("          -->"+answer+"<--              \n");
                     console.log(" ----------------------------------------\n"); 
                     if(final_advocate.length > 0){
-                        let temp = 0 ;
                         final_advocate.map(function(advocateList,i){
 
                             if(advocateList['case']){
@@ -716,18 +746,28 @@ rl.on('line', (line) => {
                                 advocateList['case'].map(function(caseitem){
 
                                     if(caseitem['practicingState'] ==answer){
-                                        if(temp ==0){
-                                          console.log("AdvocateID :"+" "+advocateList['SeniorAdvocateId']);
-                                            temp =1;
-                                        }
-                                         console.log(caseitem['caseid']);
+                                    
+                                        console.log(caseitem['caseid']+"-"+caseitem['practicingState']+"-"+caseitem['casestatus']+"\n");
                                     }
                                 });
 
-                                console.log("\n");
                             }
 
-                           temp =0;                   
+                             if(advocateList['junior']){
+        
+                                advocateList['junior'].map(function(caseitem){
+
+                                    if(caseitem['juniorcase']){
+                                        caseitem['juniorcase'].map(function(argument) {
+                                            if(argument['casePracticingState'] == answer){
+                                                console.log(argument['jcaseid']+"-"+argument['casePracticingState']+"-"+argument['jcastatus']+"\n");
+                                                }
+                                        });
+                                    }
+                                });
+
+                            }
+
                         }); 
                     }else{
                     console.log("            NO RECORDS                  \n"); 
@@ -865,13 +905,10 @@ rl.on('line', (line) => {
             }else{
 
                 console.log('**Please provide Valid option**');
-                r1.prompt();
+                        rl.prompt(); 
+
             }
-
         }); 
-
-
-
     }
     else if( lineStatus == '0'){
         console.log("----------------------------------------\n");
