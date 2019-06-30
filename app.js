@@ -6,7 +6,7 @@ const rl = readline.createInterface({
 });
 
         console.log("----------------------------------------\n");
-        console.log("|          MENU                        |\n");
+        console.log("|             MENU                     |\n");
         console.log("----------------------------------------\n");
         console.log("|  1. Add an advocate                  |\n");
         console.log("|  2. Add junior advocates             |\n");
@@ -19,16 +19,10 @@ const rl = readline.createInterface({
         console.log("|  9. Get Advocate Details             |\n");
         console.log("|  0. Menu                             |\n");
         console.log("----------------------------------------\n");
-
-
-
-
-
-rl.prompt();
+        rl.prompt();
 
 let final_advocate =[];
-
-
+let duplicateAvoid =[];
 rl.on('line', (line) => {
 
     var lineStatus =  line.trim();
@@ -62,8 +56,8 @@ rl.on('line', (line) => {
     async function checkValidcaseIdpromise(cid,seniorid) {
             return new Promise(
                 (resolve,reject) =>{
-                
-                    final_advocate.map(function(e) { 
+                    let calseLen = final_advocate.length;
+                    final_advocate.map(function(e,i) { 
                     
                        if(e['SeniorAdvocateId'] == seniorid){
 
@@ -74,12 +68,14 @@ rl.on('line', (line) => {
                                  e['case'].map(function(caseitem){
                                     if(caseitem['caseid'] == cid){
                                         resolve({'res':true});      
-                                    }else{
-                                        resolve({'res':false});      
                                     }
 
                                 });
                             }
+                       }
+
+                       if(calseLen == i+1){
+                         resolve({'res':false});      
                        }
                       
                     });
@@ -140,7 +136,8 @@ rl.on('line', (line) => {
     async function rejectCasebySenior( objval,value, desc) {
             return new Promise(
                 (resolve,reject) =>{
-                     final_advocate.map(function(itemObj){
+                    let lenofadvocate = final_advocate.length;
+                     final_advocate.map(function(itemObj,i){
                         if (itemObj['SeniorAdvocateId'] == value) {
                             if(objval == 'rejectcase'){
 
@@ -149,15 +146,16 @@ rl.on('line', (line) => {
                                     if(caseitem['caseid'] == desc){
                                         caseitem['casestatus'] = 'deactive';
                                         resolve({'res':true});      
-                                    }else{
-                                        resolve({'res':false});      
                                     }
-
-
                                 });
 
                             }
                         }
+
+                        if(lenofadvocate == i+1){
+                          resolve({'res':false});       
+                        }
+
                     });
                 });
     }
@@ -196,12 +194,18 @@ rl.on('line', (line) => {
                      rl.question('Enter Junior Advocate Id::', async (answer) => {
                         let juniorObj ={};
                         juniorObj.juniorId = answer;
-                        let resjn = await createJuniorid('junior',seniorid,juniorObj);
-                        if(resjn){
-                            resolve({'res':true})
-                        }else{
-                           resolve({'res':false})
-                        }
+                            if(duplicateAvoid.indexOf(answer) > -1){
+                                 resolve({'res':false})   
+                            }else{
+                                duplicateAvoid.push(answer);
+                                let resjn = await createJuniorid('junior',seniorid,juniorObj);
+                                if(resjn){
+                                    resolve({'res':true})
+                                }else{
+                                   resolve({'res':false})
+                                }  
+                            }
+                           
                     })
                 });
     }
@@ -280,12 +284,18 @@ rl.on('line', (line) => {
                 rl.question('Enter Case ID ::', async (answer) => {
                     let caseObj ={};
                     caseObj.caseid = answer;
-                    let resjn = await createPracticingStateAdvocateId(seniorid,caseObj);
-                        if(resjn){
-                            resolve({'res':true})
+                        if(duplicateAvoid.indexOf(answer) > -1){
+                                resolve({'res':false})
                         }else{
-                            resolve({'res':false})
+                            duplicateAvoid.push(answer);
+                             let resjn = await createPracticingStateAdvocateId(seniorid,caseObj);
+                            if(resjn){
+                                resolve({'res':true})
+                            }else{
+                                resolve({'res':false})
+                            }
                         }
+                       
                 });
         });
     }
@@ -302,6 +312,7 @@ rl.on('line', (line) => {
                         }else{
                             let advocate_Obj ={};
                             advocate_Obj.SeniorAdvocateId = answer;
+                            duplicateAvoid.push(answer);
                             final_advocate.push(advocate_Obj);
                             console.log("***Added Success***");
                         }
@@ -327,6 +338,8 @@ rl.on('line', (line) => {
                                             let juniorRes =await getJuniorAdvocateId(answer);
                                             if(juniorRes.res){
                                                 console.log("***Junior Advocate created Success***");
+                                            }else{
+                                                console.log("***Id already exit***");
                                             }
                                     }else{
                                         console.log("***Enter Valid SeniorId***");
@@ -376,6 +389,8 @@ rl.on('line', (line) => {
                             let response = await createCaseAdvocateId(answer);
                             if(response.res){
                                 console.log("***Case created Success***"); 
+                            }else{
+                                 console.log("***case id already exit***"); 
                             }
                         }else{
                             console.log("***Please Enter Valid SeniorId***");   
@@ -428,6 +443,8 @@ rl.on('line', (line) => {
                                 let response = await updatejuniorAdvocateId(answer,'scase');
                                 if(response.res){
                                     console.log("**Case sucessfully Rejected**"); 
+                                }else{
+                                    console.log("**issue on rejection try once again**"); 
                                 }
 
                             }else{
@@ -454,7 +471,8 @@ rl.on('line', (line) => {
         console.log("|            NO RECORDS                  |\n"); 
         }          
          
-        console.log(" ----------------------------------------\n"); 
+        console.log(" ----------------------------------------\n");
+        rl.prompt();
     }
     else if(lineStatus == '8'){
 
@@ -468,7 +486,8 @@ rl.on('line', (line) => {
                     if(final_advocate.length > 0){
                         let temp = 0 ;
                         final_advocate.map(function(advocateList,i){
-                            if(advocateList['case'].length > 0){
+
+                            if(advocateList['case']){
         
                                 advocateList['case'].map(function(caseitem){
 
@@ -482,8 +501,8 @@ rl.on('line', (line) => {
                                 });
 
                                 console.log("\n");
-
                             }
+
                            temp =0;                   
                         }); 
                     }else{
@@ -494,7 +513,6 @@ rl.on('line', (line) => {
                      rl.prompt();
                 });
     }
-
     else if(lineStatus == '9'){
 
 
@@ -517,22 +535,28 @@ rl.on('line', (line) => {
                                                 if(advocateList['SeniorAdvocateId'] == answer){
 
                                                     console.log("AdvocateId"+":"+advocateList['SeniorAdvocateId']+"\n")
-                                                    console.log("State"+":"+advocateList['state']['stateId']+"\n")
-                                                    console.log("Junior Advocate List :\n")
-
-
-                                                        if(advocateList['junior'].length > 0){
+                                                    if(advocateList['state']){
+                                                         console.log("State"+":"+advocateList['state']['stateId']+"\n")
+                                                    }
+                                                    if(advocateList['junior']){
+                                                           console.log("Junior Advocate List :\n")
+                                                           let design_tem ="";
                                                             advocateList['junior'].map(function(argument) {
-                                                                console.log(argument['juniorId']+"-"+ argument['practicingState']) 
+                                                                  design_tem  = design_tem + argument['juniorId'];
+                                                                    if(argument['practicingState']){
+                                                                     design_tem  = design_tem +"-"+argument['practicingState'];
+                                                                    }
+
+                                                              console.log(design_tem); 
+                                                              design_tem="";    
                                                             });
                                                         }
-                                                    console.log("Case Details :\n")
-
-                                                        if(advocateList['case'].length > 0){
+                                                        if(advocateList['case']){
+                                                           console.log("Case Details :\n")
                                                             advocateList['case'].map(function(argument) {
                                                                 console.log(argument['caseid']+"-"+ argument['practicingState']+"-"+ argument['casestatus']) 
                                                             });
-
+                                                        
                                                         }
 
                                                 }
@@ -554,11 +578,8 @@ rl.on('line', (line) => {
                                                 await createJuiorRecord();
                                                 rl.prompt();
                                          })();  
-              });
-        
-              
+              });           
     }
-
     else if( lineStatus == '0'){
         console.log("----------------------------------------\n");
         console.log("|          MENU                        |\n");
@@ -575,7 +596,6 @@ rl.on('line', (line) => {
         console.log("|  0. Menu                             |\n");
         console.log("----------------------------------------\n");
          rl.prompt(); 
-
     }
     else{
         console.log("**Please Enter Valid Option****");
