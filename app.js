@@ -27,33 +27,48 @@ let final_advocate =[];
 // let final_advocate =[{
 //     "SeniorAdvocateId": "2323",
 //     "junior": [{
-//         "juniorId": "1111",
+//         "juniorId": "4444",
+//         "practicingState": "TN",
 //         "juniorcase": [{
 //             "casePracticingState": "TN",
-//             "jcaseid": "REW345",
-//             "jcastatus": "active"
-//         }, {
-//             "casePracticingState": "TN",
-//             "jcaseid": "GRE234",
-//             "jcastatus": "active"
-//         }]
-//     },
-//     {
-//         "juniorId": "3333",
-//         "juniorcase": [{
-//             "casePracticingState": "KA",
-//             "jcaseid": "FGD454",
-//             "jcastatus": "active"
-//         }, {
-//             "casePracticingState": "TN",
-//             "jcaseid": "SERD34",
+//             "jcaseid": "TER345",
 //             "jcastatus": "active"
 //         }]
 //     }],
+//     "state": {
+//         "stateId": "TN"
+//     },
 //     "case": [{
-//         "caseid": "TRE789",
+//         "caseid": "WER234",
 //         "practicingState": "TN",
-//         "casestatus": "deactive"
+//         "casestatus": "active"
+//     }]
+// }, {
+//     "SeniorAdvocateId": "2424",
+//     "junior": [{
+//         "juniorId": "2222",
+//         "practicingState": "TN",
+//         "juniorcase": [{
+//             "casePracticingState": "TN",
+//             "jcaseid": "LOL543",
+//             "jcastatus": "deactive"
+//         }]
+//     },{
+//         "juniorId": "8888",
+//         "practicingState": "TN",
+//         "juniorcase": [{
+//             "casePracticingState": "TN",
+//             "jcaseid": "KOR565",
+//             "jcastatus": "deactive"
+//         }]
+//     }],
+//     "state": {
+//         "stateId": "TH"
+//     },
+//     "case": [{
+//         "caseid": "JAK234",
+//         "practicingState": "TN",
+//         "casestatus": "active"
 //     }]
 // }];
 let duplicateAvoid =[];
@@ -68,7 +83,7 @@ rl.on('line', (line) => {
                 const rowLen = final_advocate.length;
                 final_advocate.map(function(e,i) { 
                     
-                            if(typeof(e['junior']) == 'undefined'){
+                            if(!e['junior']){
                                     resolve({'res':false})
                             }else{
                                  e['junior'].map(function(junioritem){
@@ -720,7 +735,23 @@ rl.on('line', (line) => {
         console.log(" ----------------------------------------\n");  
         if(final_advocate.length > 0){
             final_advocate.map(function(advocateList,i){
-        console.log("         "+i+".    "+advocateList['SeniorAdvocateId']+"\n");
+
+                
+                console.log("SENIOR ADVOCATE:"+" "+advocateList['SeniorAdvocateId']+"\n");
+            
+
+                if(advocateList['junior']){
+
+                    advocateList['junior'].map(function(argument,j) {
+                          if(j ==0){
+                            console.log("JUNIOR:");
+                        }
+                      console.log("     "+j+"."+argument['juniorId']+"\n");
+
+                    });
+
+                }
+
             }); 
         }else{
         console.log("|            NO RECORDS                  |\n"); 
@@ -849,7 +880,8 @@ rl.on('line', (line) => {
                                                  })();  
                 });
 
-            }else if(answer == '2'){
+            }
+            else if(answer == '2'){
 
                 rl.question('Enter junior Advocate ID::', (answer) => {
 
